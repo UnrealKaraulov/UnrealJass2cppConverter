@@ -1,28 +1,30 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33318.248
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jass2cppConverter", "Jass2cppConverter\Jass2cppConverter.csproj", "{BEE0A3EE-B378-4BCC-A477-520BDE4A767F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jass2cpp_BuildJassEngine", "Jass2cpp_BuildJassEngine\Jass2cpp_BuildJassEngine.csproj", "{2A701C76-9A19-44F4-838D-A6910EFA8871}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JASSCPPENGINE", "JASSCPPENGINE\JASSCPPENGINE.vcxproj", "{C451A347-28EA-4737-A163-2883E1C445EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{BEE0A3EE-B378-4BCC-A477-520BDE4A767F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BEE0A3EE-B378-4BCC-A477-520BDE4A767F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BEE0A3EE-B378-4BCC-A477-520BDE4A767F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BEE0A3EE-B378-4BCC-A477-520BDE4A767F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2A701C76-9A19-44F4-838D-A6910EFA8871}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2A701C76-9A19-44F4-838D-A6910EFA8871}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2A701C76-9A19-44F4-838D-A6910EFA8871}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2A701C76-9A19-44F4-838D-A6910EFA8871}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEE0A3EE-B378-4BCC-A477-520BDE4A767F}.Release|x86.ActiveCfg = Release|Any CPU
+		{BEE0A3EE-B378-4BCC-A477-520BDE4A767F}.Release|x86.Build.0 = Release|Any CPU
+		{2A701C76-9A19-44F4-838D-A6910EFA8871}.Release|x86.ActiveCfg = Release|Any CPU
+		{2A701C76-9A19-44F4-838D-A6910EFA8871}.Release|x86.Build.0 = Release|Any CPU
+		{C451A347-28EA-4737-A163-2883E1C445EC}.Release|x86.ActiveCfg = Release|Win32
+		{C451A347-28EA-4737-A163-2883E1C445EC}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {34AC239E-BD9F-4345-8DA8-16F0709155C5}
 	EndGlobalSection
 EndGlobal

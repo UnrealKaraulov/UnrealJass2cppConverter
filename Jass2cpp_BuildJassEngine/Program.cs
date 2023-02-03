@@ -93,32 +93,32 @@ namespace JassEngineBuilder
             string RegexFuncArgs = @"(\w+)([\s|\*]+\w+)\W\s*";
             string RegexFuncAddr = @"^\s*add\s+eax\s*,\s*(\w+)";
             string[] CJassData = File.ReadAllLines("CJass.cpp");
-            List<_funcaddr> funcaddrlist = new List<_funcaddr>();
+            // List<_funcaddr> funcaddrlist = new List<_funcaddr>();
 
-            if (File.Exists("Functions.txt"))
-            {
-                Console.WriteLine("Found Functions.txt file. Read function address from this file...");
-                string[] FunctionsListAddr = File.ReadAllLines("Functions.txt");
+            //if (File.Exists("Functions.txt"))
+            //{
+            //    Console.WriteLine("Found Functions.txt file. Read function address from this file...");
+            //    string[] FunctionsListAddr = File.ReadAllLines("Functions.txt");
 
-                Console.WriteLine("Functions.txt lenght:" + FunctionsListAddr.Length);
-                //"Deg2Rad" located at 0x1DF360 with parameters "(R)R"
-                string GetFuncNameAndAddr = @"""(\w+)""\s.*?(0x\w+)";
-                int loadedaddress = 0;
-                Match GetFuncAddress = null;
-                foreach (string s in FunctionsListAddr)
-                {
-                    if ((GetFuncAddress = Regex.Match(s, GetFuncNameAndAddr)).Success)
-                    {
-                        loadedaddress++;
-                        _funcaddr tmpstr = new _funcaddr();
-                        tmpstr.funcaddr = GetFuncAddress.Groups[2].Value;
-                        tmpstr.funcname = GetFuncAddress.Groups[1].Value;
-                        funcaddrlist.Add(tmpstr);
-                    }
-                }
+            //    Console.WriteLine("Functions.txt lenght:" + FunctionsListAddr.Length);
+            //    //"Deg2Rad" located at 0x1DF360 with parameters "(R)R"
+            //    string GetFuncNameAndAddr = @"""(\w+)""\s.*?(0x\w+)";
+            //    int loadedaddress = 0;
+            //    Match GetFuncAddress = null;
+            //    foreach (string s in FunctionsListAddr)
+            //    {
+            //        if ((GetFuncAddress = Regex.Match(s, GetFuncNameAndAddr)).Success)
+            //        {
+            //            loadedaddress++;
+            //            _funcaddr tmpstr = new _funcaddr();
+            //            tmpstr.funcaddr = GetFuncAddress.Groups[2].Value;
+            //            tmpstr.funcname = GetFuncAddress.Groups[1].Value;
+            //            funcaddrlist.Add(tmpstr);
+            //        }
+            //    }
 
-                Console.WriteLine("Load:" + loadedaddress + " addr count.");
-            }
+            //    Console.WriteLine("Load:" + loadedaddress + " addr count.");
+            //}
 
 
             int index = 0;
@@ -170,7 +170,7 @@ namespace JassEngineBuilder
                             tmparg.argname =
                                 GetFuncArgs.Groups[i + 2].Value.Trim().Replace(",", "").Trim().Replace('*', '&');
                             tmparg.argtype =
-                                GetFuncArgs.Groups[i + 1].Value.Trim().Replace(",", "").Trim().Replace('*','&');
+                                GetFuncArgs.Groups[i + 1].Value.Trim().Replace(",", "").Trim().Replace('*', '&');
 
 
                             FuncArgs.Add(tmparg);
@@ -179,7 +179,7 @@ namespace JassEngineBuilder
 
 
                     FuncStruct NewFunction = new FuncStruct();
-                    NewFunction.FuncAddr ="0";
+                    NewFunction.FuncAddr = "0";
                     NewFunction.FuncArgs = FuncArgs.ToArray();
                     NewFunction.FuncName = FuncName.Trim();
 
@@ -255,6 +255,7 @@ namespace JassEngineBuilder
             }
 
             WriteToJassDefineHeader("#pragma once");
+            WriteToJassDefineHeader("namespace JASSCPP {");
             WriteToJassDefineHeader("union DWFP");
             WriteToJassDefineHeader("{");
             WriteToJassDefineHeader("unsigned int dw;");
@@ -265,40 +266,41 @@ namespace JassEngineBuilder
             {
                 WriteToJassDefineHeader(str.argtype + str.argname + ";");
             }
+            WriteToJassDefineHeader("};");
 
             WriteToJassNativesList("#pragma once");
             WriteToJassNativesList("#include <Windows.h>");
             WriteToJassNativesList("#include <stdio.h>");
             WriteToJassNativesList("#include \"JassDefineHeader.h\"");
+            WriteToJassNativesList("namespace JASSCPP {");
+            WriteToJassNativesList("extern int GameDll;");
+
+            WriteToJassNativesList("typedef int(__fastcall *LookupNative)(const char *,int unknown);");
+            WriteToJassNativesList("extern LookupNative LookupNative_org;");
+
+
+            WriteToJassNativesListInitialzier("#include \"JassNativesList.h\"");
+            WriteToJassNativesListInitialzier("namespace JASSCPP {");
+            WriteToJassNativesListInitialzier("LookupNative LookupNative_org = NULL;");
+
+            WriteToJassEngineInit("#pragma comment(lib, \"libMinHook.x86.lib\")");
 
             WriteToJassEngineInit("#include <Windows.h>");
+            WriteToJassEngineInit("#include <sstream>");
             WriteToJassEngineInit("#include <string>");
             WriteToJassEngineInit("#include \"JassDefineHeader.h\"");
             WriteToJassEngineInit("#include \"JassNativesList.h\"");
             WriteToJassEngineInit("#include \"MinHook.h\"");
-
-            WriteToJassNativesListInitialzier("#include \"JassNativesList.h\"");
-
-            WriteToJassEngineInit("#pragma comment(lib, \"libMinHook.x86.lib\")");
-
-
-            WriteToJassEngineInit("static int GameDll = (int) GetModuleHandle(\"Game.dll\");");
-
-            WriteToJassEngineInit("#include <Windows.h>");
-            WriteToJassEngineInit("#include <time.h>");
-            WriteToJassEngineInit("#include <sstream>");
-            WriteToJassEngineInit("#include <string>");
-            WriteToJassEngineInit("#include \"JassNativesList.h\"");
-            WriteToJassEngineInit("using namespace std;");
-            WriteToJassEngineInit("static int GameDll = (int) GetModuleHandle( \"Game.dll\");");
+            WriteToJassEngineInit("namespace JASSCPP {");
+            WriteToJassEngineInit("int GameDll = (int) GetModuleHandleA( \"Game.dll\");");
 
             WriteToJassEngineInit("FILE * logfile;");
             WriteToJassNativesList("extern FILE * logfile;");
 
-            WriteToJassEngineInit("char * funcname1 = \"NULLNAME\";");
-            WriteToJassNativesList("extern char * funcname1;");
-            WriteToJassEngineInit("char * funcname2 = \"NULLNAME\";");
-            WriteToJassNativesList("extern char * funcname2;");
+            WriteToJassEngineInit("char funcname1[] = \"NULLNAME\";");
+            WriteToJassNativesList("extern char funcname1[];");
+            WriteToJassEngineInit("char funcname2[] = \"NULLNAME\";");
+            WriteToJassNativesList("extern char funcname2[];");
 
             WriteToJassEngineInit("void EngineJassLog( const char * format , ... )");
             WriteToJassEngineInit("{");
@@ -309,7 +311,7 @@ namespace JassEngineBuilder
             WriteToJassEngineInit("	va_list args;\n va_start( args , format );\n vfprintf_s( logfile , format , args );\n va_end( args );\n /*fflush( logfile );*/");
             WriteToJassEngineInit("}");
 
-            WriteToJassEngineInit("string GetStrID( int id )");
+            WriteToJassEngineInit("std::string GetStrID( int id )");
             WriteToJassEngineInit("{");
             WriteToJassEngineInit("    char buff[ 7 ];");
             WriteToJassEngineInit("    char buff2[ 4 ];");
@@ -331,8 +333,8 @@ namespace JassEngineBuilder
             WriteToJassEngineInit("        }");
             WriteToJassEngineInit("    }");
             WriteToJassEngineInit("    if ( needreturnid )");
-            WriteToJassEngineInit("      return string( buff );");
-            WriteToJassEngineInit("    return to_string( id );");
+            WriteToJassEngineInit("      return std::string( buff );");
+            WriteToJassEngineInit("    return std::to_string( id );");
             WriteToJassEngineInit("}");
 
             WriteToJassEngineInit("const char * BoolToStr( BOOL boolean )");
@@ -347,11 +349,11 @@ namespace JassEngineBuilder
 
             WriteToJassEngineInit("char * ReadJassStringNormal( int JASSSTRING )");
             WriteToJassEngineInit("{");
-            WriteToJassEngineInit("    if ( JASSSTRING == NULL || JASSSTRING >= INT_MAX ) { return \" \"; }");
+            WriteToJassEngineInit("    if ( JASSSTRING == NULL || JASSSTRING >= INT_MAX ) { return NULL; }");
             WriteToJassEngineInit("    int offset1 = *( int* ) ( ( int ) JASSSTRING + 8 );");
-            WriteToJassEngineInit("    if ( offset1 == NULL || offset1 >= INT_MAX ) { return \" \"; }");
+            WriteToJassEngineInit("    if ( offset1 == NULL || offset1 >= INT_MAX ) { return NULL; }");
             WriteToJassEngineInit("    int offset2 = *( int * ) ( ( *( int* ) ( ( int ) JASSSTRING + 8 ) ) + 0x1C );");
-            WriteToJassEngineInit("    if ( offset2 == NULL || offset2 >= INT_MAX ) { return \" \"; }");
+            WriteToJassEngineInit("    if ( offset2 == NULL || offset2 >= INT_MAX ) { return NULL; }");
             WriteToJassEngineInit("    return *( char ** ) ( ( *( int* ) ( ( int ) JASSSTRING + 8 ) ) + 0x1C );");
             WriteToJassEngineInit("}");
 
@@ -373,17 +375,17 @@ namespace JassEngineBuilder
             WriteToJassEngineInit("    return cRet;");
             WriteToJassEngineInit("}");
 
-            WriteToJassEngineInit("string GetUnitHID( int unitid )");
+            WriteToJassEngineInit("std::string GetUnitHID( int unitid )");
             WriteToJassEngineInit("{");
             WriteToJassEngineInit("   if ( unitid == 0 ) return \"null\";");
-            WriteToJassEngineInit("        stringstream s; s << unitid; s << \"(\" << GetStrID( GetUnitTypeId_ptr(unitid) ) << \")\";");
+            WriteToJassEngineInit("       std::stringstream s; s << unitid; s << \"(\" << GetStrID( GetUnitTypeId_org(unitid) ) << \")\";");
             WriteToJassEngineInit("    return s.str( );");
             WriteToJassEngineInit("}");
 
-            WriteToJassEngineInit("string GetItemHID( int itemid )");
+            WriteToJassEngineInit("std::string GetItemHID( int itemid )");
             WriteToJassEngineInit("{");
             WriteToJassEngineInit("   if ( itemid == 0 ) return \"null\";");
-            WriteToJassEngineInit("        stringstream s; s << itemid; s << \"(\" << GetStrID( GetItemTypeId_ptr( itemid ) ) << \")\";");
+            WriteToJassEngineInit("        std::stringstream s; s << itemid; s << \"(\" << GetStrID( GetItemTypeId_org( itemid ) ) << \")\";");
             WriteToJassEngineInit("    return s.str( );");
             WriteToJassEngineInit("}");
 
@@ -417,16 +419,15 @@ namespace JassEngineBuilder
             {
                 WriteToJassNativesList("extern " + JassNativeFunctions[i].FuncName +
                     "_FUNC " + JassNativeFunctions[i].FuncName + "_org;");
-             
+
                 WriteToJassNativesListInitialzier(JassNativeFunctions[i].FuncName +
                     "_FUNC " + JassNativeFunctions[i].FuncName + "_org = nullptr;");
             }
-          
 
-            WriteToJassEngineInit("typedef int(__fastcall *LookupNative)(LPSTR,int unknown);");
-            WriteToJassEngineInit("LookupNative LookupNative_org = NULL;");
 
             WriteToJassNativesList("void Initializer( );");
+            WriteToJassNativesList("}");
+
             WriteToJassNativesListInitialzier("void Initializer( )");
             WriteToJassNativesListInitialzier("{");
             WriteToJassNativesListInitialzier("   LookupNative_org = (LookupNative) (GameDll + 0x44EA00);");
@@ -436,15 +437,17 @@ namespace JassEngineBuilder
                     "_FUNC " + ") LookupNative_org(\"" + JassNativeFunctions[i].FuncName + "\",0);");
             }
             WriteToJassNativesListInitialzier("}");
+            WriteToJassNativesListInitialzier("}");
 
 
+            WriteToJassEngineInit("}");
             WriteToJassEngineInit("BOOL APIENTRY DllMain( HINSTANCE hDLL , DWORD reason , LPVOID reserved )");
             WriteToJassEngineInit("{");
             WriteToJassEngineInit("	switch ( reason )");
             WriteToJassEngineInit("	{");
             WriteToJassEngineInit("		case DLL_PROCESS_ATTACH:");
             WriteToJassEngineInit("			MH_Initialize( );");
-            WriteToJassEngineInit("			Initializer( );");
+            WriteToJassEngineInit("			JASSCPP::Initializer( );");
             WriteToJassEngineInit("		break;");
             WriteToJassEngineInit("		case DLL_PROCESS_DETACH:");
             WriteToJassEngineInit("			MH_Uninitialize( );");

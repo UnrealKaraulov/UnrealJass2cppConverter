@@ -137,8 +137,6 @@ namespace Jass2cppConverter
             }
 
 
-
-
         }
 
         static void Main(string[] args)
@@ -170,17 +168,17 @@ namespace Jass2cppConverter
                 {
                     if (tmpGlobalVar.isarray)
                     {
-                        GlobalVariables.Add(tmpGlobalVar.type + " " + tmpGlobalVar.name + "[8192];");
-                        GlobalVariablesHeader.Add("extern " + tmpGlobalVar.type + " " + tmpGlobalVar.name + "[8192];");
+                        GlobalVariables.Add("JASSCPP::" + tmpGlobalVar.type + " " + tmpGlobalVar.name + "[8192];");
+                        GlobalVariablesHeader.Add("extern JASSCPP::" + tmpGlobalVar.type + " " + tmpGlobalVar.name + "[8192];");
                     }
                     else
                     {
                         if (tmpGlobalVar.defaultvalue != "")
-                            GlobalVariables.Add(tmpGlobalVar.type + " " + tmpGlobalVar.name + " = " + tmpGlobalVar.defaultvalue + ";");
+                            GlobalVariables.Add("JASSCPP::" + tmpGlobalVar.type + " " + tmpGlobalVar.name + " = " + tmpGlobalVar.defaultvalue + ";");
                         else
-                            GlobalVariables.Add(tmpGlobalVar.type + " " + tmpGlobalVar.name + ";");
+                            GlobalVariables.Add("JASSCPP::" + tmpGlobalVar.type + " " + tmpGlobalVar.name + ";");
 
-                        GlobalVariablesHeader.Add("extern " + tmpGlobalVar.type + " " + tmpGlobalVar.name + ";");
+                        GlobalVariablesHeader.Add("extern JASSCPP::" + tmpGlobalVar.type + " " + tmpGlobalVar.name + ";");
                     }
 
                 }
@@ -198,17 +196,17 @@ namespace Jass2cppConverter
             File.Delete("out.cpp");
             File.Delete("out.h");
 
-            File.AppendAllText("out.cpp", "//Global vars");
+            File.AppendAllText("out.cpp", "//Global vars\n");
             File.AppendAllLines("out.cpp", GlobalVariables.ToArray());
-            File.AppendAllText("out.cpp", "//Functions");
+            File.AppendAllText("out.cpp", "//Functions\n");
 
 
 
-            File.AppendAllText("out.cpp", "//Global defines");
+            File.AppendAllText("out.cpp", "//Global defines\n");
             File.AppendAllLines("out.h", GlobalDefines.ToArray());
-            File.AppendAllText("out.cpp", "//Global vars");
+            File.AppendAllText("out.cpp", "//Global vars\n");
             File.AppendAllLines("out.h", GlobalVariablesHeader.ToArray());
-            File.AppendAllText("out.cpp", "//Functions");
+            File.AppendAllText("out.cpp", "//Functions\n");
 
             Console.WriteLine("Преобразование в CPP код завершено. ");
 
