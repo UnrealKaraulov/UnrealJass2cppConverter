@@ -28,7 +28,7 @@ namespace Jass2cppConverter
         {
             public string name;
             public string returntype;
-            public string[] body;
+            public List<string> body;
             public string args;
         }
         static List<Function> Functions = null;
@@ -40,8 +40,11 @@ namespace Jass2cppConverter
         const string RegexBadLine1 = @"^\s*$";
         const string RegexBadLine2 = @"^\s*//.*";
         const string RegexGetStartGlobals = @"^\s*globals";
+        const string RegexGetKeyWordLocal = @"^\s*local";
+        const string RegexGetKeyWordSet = @"^\s*set";
+        const string RegexGetKeyWordCall = @"^\s*call";
         const string RegexGetEndGlobals = @"^\s*endglobals";
-        const string RegexGetFunctionNameAndVars = @"^\s*(constant\s+|)function\s+(.*?)\s+takes\s+(.*?)returns\s+(.*)$";
+        const string RegexGetFunctionNameAndVars = @"^\s*(constant\s+|)function\s+(.*?)\s+takes\s+(.*?)\s+returns\s+(.*)$";
         const string RegexGetFunctionEnd = @"^\s*endfunction";
 
         const string RegexGetGlobalVarData = @"^\s*(constant\s+|)(\w+)\s+(array\s+|)(\w+)\s*(=.*|)";
@@ -53,7 +56,6 @@ namespace Jass2cppConverter
 
         static void BuildGlobalVars()
         {
-
             Globals = new List<GlobalVar>();
 
             bool GlobalStartFound = false;
@@ -115,28 +117,41 @@ namespace Jass2cppConverter
 
             Function tempfunc = new Function();
             List<string> funcbody = new List<string>();
+
+            bool foundfunc = false;
+
             foreach (string str in War3MapJdata)
             {
                 if (Regex.Match(str, RegexBadLine1).Success || Regex.Match(str, RegexBadLine2).Success)
                 {
                     continue;
                 }
+
+                if (foundfunc)
+                {
+                    if (Regex.Match(str, RegexGetFunctionEnd).Success)
+                    {
+                        foundfunc = false;
+                        Functions.Add(tempfunc);
+                        tempfunc = new Function();
+                    }
+                    else
+                    {
+                        tempfunc.body.Add(str);
+                    }
+                    continue;
+                }
+
                 Match FuncNameAndVars = null;
                 if ((FuncNameAndVars = Regex.Match(str, RegexGetFunctionNameAndVars)).Success)
                 {
                     tempfunc.name = FuncNameAndVars.Groups[2].Value;
                     tempfunc.args = FuncNameAndVars.Groups[3].Value;
                     tempfunc.returntype = FuncNameAndVars.Groups[4].Value;
-                }
-
-                if (Regex.Match(str, RegexGetFunctionNameAndVars).Success)
-                {
-
-
+                    tempfunc.body = new List<string>();
+                    foundfunc = true;
                 }
             }
-
-
         }
 
         static void Main(string[] args)
@@ -193,21 +208,48 @@ namespace Jass2cppConverter
 
             Console.WriteLine("Преобразование в CPP код....");
 
-            File.Delete("out.cpp");
-            File.Delete("out.h");
+            File.Delete("war3map.cpp");
+            File.Delete("war3map.h");
 
-            File.AppendAllText("out.cpp", "//Global vars\n");
-            File.AppendAllLines("out.cpp", GlobalVariables.ToArray());
-            File.AppendAllText("out.cpp", "//Functions\n");
+            File.AppendAllText("war3map.cpp", "#include \"war3map.h\"\n");
+            File.AppendAllText("war3map.cpp", "namespace war3map\n{\n");
+
+            File.AppendAllText("war3map.cpp", "//Global vars\n");
+            File.AppendAllLines("war3map.cpp", GlobalVariables.ToArray());
 
 
+            File.AppendAllText("war3map.h", "namespace war3map\n{\n");
 
-            File.AppendAllText("out.cpp", "//Global defines\n");
-            File.AppendAllLines("out.h", GlobalDefines.ToArray());
-            File.AppendAllText("out.cpp", "//Global vars\n");
-            File.AppendAllLines("out.h", GlobalVariablesHeader.ToArray());
-            File.AppendAllText("out.cpp", "//Functions\n");
+            File.AppendAllText("war3map.h", "//Global defines\n");
+            File.AppendAllLines("war3map.h", GlobalDefines.ToArray());
 
+            File.AppendAllText("war3map.h", "//Global vars\n");
+            File.AppendAllLines("war3map.h", GlobalVariablesHeader.ToArray());
+
+            File.AppendAllText("war3map.cpp", "//Functions\n");
+            File.AppendAllText("war3map.h", "//Functions\n");
+
+            foreach (var func in Functions)
+            {
+                File.AppendAllText("war3map.h", Regex.Replace(func.returntype, @"\bnothing\b", "void") + " " + func.name + "(" + Regex.Replace(func.args, @"\bnothing\b", "") + ");\n");
+                File.AppendAllText("war3map.cpp", Regex.Replace(func.returntype, @"\bnothing\b", "void") + " " + func.name + "(" + Regex.Replace(func.args, @"\bnothing\b", "") + ")\n");
+                File.AppendAllText("war3map.cpp", "{\n");
+                foreach(var funcline in func.body)
+                {
+                    //string cleanline = Regex.Replace(Regex.Replace(Regex.Replace(funcline, 
+                    //    RegexGetKeyWordLocal, ""), 
+                    //    RegexGetKeyWordSet, ""), 
+                    //    RegexGetKeyWordCall, "") + ";\n";
+
+                    //File.AppendAllText("war3map.cpp", cleanline);
+
+                    File.AppendAllText("war3map.cpp", funcline);
+                }
+                File.AppendAllText("war3map.cpp", "}\n");
+            }
+
+            File.AppendAllText("war3map.cpp", "}\n");
+            File.AppendAllText("war3map.h", "}\n");
             Console.WriteLine("Преобразование в CPP код завершено. ");
 
             Console.WriteLine("Создание JASS движка начинается...");
@@ -215,11 +257,6 @@ namespace Jass2cppConverter
 
 
             Console.ReadLine();
-
-
-
-
-
         }
     }
 }

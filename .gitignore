@@ -1,0 +1,17 @@
+
+*.db-wal
+.vs/UnrealJass2cppConverter/v17/.suo
+*.db
+*.lock
+*.vsidx
+*.opendb
+*.db-shm
+*.cache
+*.tlog
+*.ipdb
+*.iobj
+*.recipe
+*.obj
+*.log
+*.txt
+*.pdb
