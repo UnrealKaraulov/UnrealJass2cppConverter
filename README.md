@@ -6,3 +6,4 @@ Jass2cpp_BuildJassEngine - convert CJass.cpp > JASSCPPENGINE
 
 JASSCPPENGINE Test
 
+NOT COMPLETED!!!
