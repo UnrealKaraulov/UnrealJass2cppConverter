@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -46,7 +46,7 @@ namespace Jass2cppConverter
         const string RegexGetEndGlobals = @"^\s*endglobals";
         const string RegexGetFunctionNameAndVars = @"^\s*(constant\s+|)function\s+(.*?)\s+takes\s+(.*?)\s+returns\s+(.*)$";
         const string RegexGetFunctionEnd = @"^\s*endfunction";
-
+        const string RegexGetIfCondition = @"if\s*\((.+?)\)\s*then";
         const string RegexGetGlobalVarData = @"^\s*(constant\s+|)(\w+)\s+(array\s+|)(\w+)\s*(=.*|)";
         const string RegexGetValueFromVar = @"=\s*(.*)$";
         static string[] War3MapJdata = null;
@@ -227,27 +227,89 @@ namespace Jass2cppConverter
             File.AppendAllLines("war3map.h", GlobalVariablesHeader.ToArray());
 
             File.AppendAllText("war3map.cpp", "//Functions\n");
-            File.AppendAllText("war3map.h", "//Functions\n");
-
-            foreach (var func in Functions)
+            File.AppendAllText("war3map.h", "//Functions\n"); foreach (var func in Functions)
             {
                 File.AppendAllText("war3map.h", Regex.Replace(func.returntype, @"\bnothing\b", "void") + " " + func.name + "(" + Regex.Replace(func.args, @"\bnothing\b", "") + ");\n");
+
                 File.AppendAllText("war3map.cpp", Regex.Replace(func.returntype, @"\bnothing\b", "void") + " " + func.name + "(" + Regex.Replace(func.args, @"\bnothing\b", "") + ")\n");
                 File.AppendAllText("war3map.cpp", "{\n");
-                foreach(var funcline in func.body)
+
+                int indentLevel = 1; 
+                foreach (var funcline in func.body)
                 {
-                    //string cleanline = Regex.Replace(Regex.Replace(Regex.Replace(funcline, 
-                    //    RegexGetKeyWordLocal, ""), 
-                    //    RegexGetKeyWordSet, ""), 
-                    //    RegexGetKeyWordCall, "") + ";\n";
+                    string cleanline = funcline;
 
-                    //File.AppendAllText("war3map.cpp", cleanline);
+                    string indent = new string(' ', funcline.Length - funcline.TrimStart().Length);
 
-                    File.AppendAllText("war3map.cpp", funcline);
+                    if (Regex.IsMatch(cleanline, RegexGetKeyWordLocal))
+                    {
+                        cleanline = Regex.Replace(cleanline, RegexGetKeyWordLocal, "").Trim();
+                        cleanline = "JASSCPP::" + cleanline + ";"; 
+                    }
+
+                    if (Regex.IsMatch(cleanline, RegexGetKeyWordSet))
+                    {
+                        cleanline = Regex.Replace(cleanline, RegexGetKeyWordSet, "").Trim() + ";";
+                    }
+                    if (Regex.IsMatch(cleanline, RegexGetKeyWordCall))
+                    {
+                        cleanline = Regex.Replace(cleanline, RegexGetKeyWordCall, "").Trim() + ";";
+                    }
+                    cleanline = Regex.Replace(cleanline, @"\band\b", "&&");
+                    cleanline = Regex.Replace(cleanline, @"\bor\b", "||");
+
+                    cleanline = Regex.Replace(cleanline, @"\bnot\b", "!");
+
+                    cleanline = Regex.Replace(cleanline, @"\s+", " ").Trim();
+
+                    if (Regex.IsMatch(cleanline, @"^\s*return\b"))
+                    {
+                        cleanline = Regex.Replace(cleanline, @"\breturn\b", "return").Trim() + ";";
+                    }
+                    if (Regex.IsMatch(cleanline, @"^\s*if\b") && cleanline.Contains("then"))
+                    {
+                        var condition = Regex.Match(cleanline, @"if\s*\((.*)\)").Groups[1].Value.Trim();
+                        cleanline = indent + "if (" + condition + ")";
+                        File.AppendAllText("war3map.cpp", cleanline + "\n");
+                        File.AppendAllText("war3map.cpp", indent + "{\n");
+                        indentLevel++;
+                        continue;
+                    }
+                    else if (Regex.IsMatch(cleanline, @"^\s*elseif\b"))
+                    {
+                        var condition = Regex.Match(cleanline, @"elseif\s*\((.*)\)").Groups[1].Value.Trim();
+                        cleanline = indent + "}\n else if (" + condition + ")";
+                        File.AppendAllText("war3map.cpp", cleanline + "\n");
+                        File.AppendAllText("war3map.cpp", indent + "{\n");
+                        continue;
+                    }
+                    else if (Regex.IsMatch(cleanline, @"^\s*else\b"))
+                    {
+                        cleanline = indent + "}\n else";
+                        File.AppendAllText("war3map.cpp", cleanline + "\n");
+                        File.AppendAllText("war3map.cpp", indent + "{\n");
+                        continue;
+                    }
+                    else if (Regex.IsMatch(cleanline, @"^\s*endif\b"))
+                    {
+                        indentLevel--;
+                        cleanline = indent + "}";
+                        File.AppendAllText("war3map.cpp", cleanline + "\n");
+                        continue;
+                    }
+
+                    if (cleanline.StartsWith("//"))
+                    {
+                        cleanline = indent + cleanline;
+                    }
+
+                    cleanline = indent + cleanline;
+
+                    File.AppendAllText("war3map.cpp", cleanline + "\n");
                 }
+
                 File.AppendAllText("war3map.cpp", "}\n");
             }
-
             File.AppendAllText("war3map.cpp", "}\n");
             File.AppendAllText("war3map.h", "}\n");
             Console.WriteLine("Преобразование в CPP код завершено. ");
