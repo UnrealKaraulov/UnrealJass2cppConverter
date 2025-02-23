@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -177,8 +177,8 @@ namespace Jass2cppConverter
                 {
                     if (tmpGlobalVar.isarray)
                     {
-                        GlobalVariables.Add("JASSCPP::" + tmpGlobalVar.type + " " + tmpGlobalVar.name + "[8192];");
-                        GlobalVariablesHeader.Add("extern JASSCPP::" + tmpGlobalVar.type + " " + tmpGlobalVar.name + "[8192];");
+                        GlobalVariables.Add("JASSCPP::" + tmpGlobalVar.type + " " + tmpGlobalVar.name + "[32768];");
+                        GlobalVariablesHeader.Add("extern JASSCPP::" + tmpGlobalVar.type + " " + tmpGlobalVar.name + "[32768];");
                     }
                     else
                     {
@@ -233,7 +233,7 @@ namespace Jass2cppConverter
                     {
                         if (func.body[index].Length > 1 && func.body[index + 1].Length > 0 && func.body[index + 1][0] == '"')
                         {
-                            func.body[index] = func.body[index].Remove(func.body[index].Length - 1) + "=\"\\n\"";
+                            func.body[index] = func.body[index].Remove(func.body[index].Length - 1) + "\"\\\\n\"";
                             func.body[index + 1] = "";
                         }
                     }
