@@ -44,8 +44,8 @@ namespace Jass2cppConverter
         const string RegexGetKeyWordLocal = @"^\s*local";
         const string RegexGetKeyWordSet = @"^\s*set";
         const string RegexGetKeyWordCall = @"^\s*call";
-        const string RegexGetIfConditionEmpty = @"^\s*if\s*(.+)\s+then";
-        const string RegexGetElseIfConditionEmpty = @"^\s*elseif\s*(.+)\s+then";
+        const string RegexGetIfConditionEmpty = @"^\s*if\s*(.+)\s*then";
+        const string RegexGetElseIfConditionEmpty = @"^\s*elseif\s*(.+)\s*then";
         const string RegexGetLoop = @"^\s*loop";
         const string RegexGetExitWhen = @"^\s*exitwhen\s*(.+)$";
         const string RegexGetEndLoop = @"^\s*endloop";
@@ -221,9 +221,9 @@ namespace Jass2cppConverter
 
             foreach (var func in Functions)
             {
-                headerBuilder.AppendLine(func.returntype + " " + func.name + "(" + func.args + ");");
+                headerBuilder.AppendLine((func.returntype.Length > 0 && func.returntype != "void" ? "JASSCPP::" + func.returntype : func.returntype ) + " " + func.name + "(" + func.args + ");");
 
-                cppBuilder.AppendLine(func.returntype + " " + func.name + "(" + func.args + ")");
+                cppBuilder.AppendLine((func.returntype.Length > 0 && func.returntype != "void" ? "JASSCPP::" + func.returntype : func.returntype) + " " + func.name + "(" + func.args + ")");
                 cppBuilder.AppendLine("{");
 
                 int indentLevel = 1;
@@ -233,7 +233,7 @@ namespace Jass2cppConverter
                     {
                         if (func.body[index].Length > 1 && func.body[index + 1].Length > 0 && func.body[index + 1][0] == '"')
                         {
-                            func.body[index] = func.body[index].Remove(func.body[index].Length - 2) + "\\n\"";
+                            func.body[index] = func.body[index].Remove(func.body[index].Length - 1) + "=\"\\n\"";
                             func.body[index + 1] = "";
                         }
                     }
@@ -277,13 +277,46 @@ namespace Jass2cppConverter
                     {
                         var condition = Regex.Match(cleanline, RegexGetIfConditionEmpty).Groups[1].Value.Trim();
                         if (condition.StartsWith("(") && condition.EndsWith(")"))
-                        {
-                            if (condition.Contains("&&") || condition.Contains("||"))
+                        { 
+                            int openBrackets = 0;
+                            int closeBrackets = 0;
+                            bool mismatchFound = false;
+                            bool foundOpen = false;
+                            bool foundClose = true;
+                            string checkcondition = condition;
+                            checkcondition = checkcondition.Remove(0, 1);
+                            checkcondition = checkcondition.Remove(checkcondition.Length - 1, 1);
+                            foreach (char c in checkcondition)
+                            {
+                                if (c == '(')
+                                {
+                                    if (!foundClose)
+                                    {
+                                        mismatchFound = true;
+                                    }
+                                    openBrackets++;
+                                    foundOpen = true;
+                                    foundClose = false;
+                                }
+                                else if (c == ')')
+                                {
+                                    closeBrackets++;
+                                    if (closeBrackets > openBrackets || !foundOpen)
+                                    {
+                                        mismatchFound = true;
+                                        break;
+                                    }
+                                    foundOpen = false;
+                                    foundClose = true;
+                                }
+                            }
+
+                            if (openBrackets != closeBrackets || mismatchFound || !foundClose)
                             {
                                 cleanline = indent + "if (" + condition + ")";
                             }
                             else
-                            {
+                            { 
                                 cleanline = indent + "if " + condition + "";
                             }
                         }
@@ -301,7 +334,40 @@ namespace Jass2cppConverter
                         var condition = Regex.Match(cleanline, RegexGetElseIfConditionEmpty).Groups[1].Value.Trim();
                         if (condition.StartsWith("(") && condition.EndsWith(")"))
                         {
-                            if (condition.Contains("&&") || condition.Contains("||"))
+                            int openBrackets = 0;
+                            int closeBrackets = 0;
+                            bool mismatchFound = false;
+                            bool foundOpen = false;
+                            bool foundClose = true;
+                            string checkcondition = condition;
+                            checkcondition = checkcondition.Remove(0, 1);
+                            checkcondition = checkcondition.Remove(checkcondition.Length - 1, 1);
+                            foreach (char c in checkcondition)
+                            {
+                                if (c == '(')
+                                {
+                                    if (!foundClose)
+                                    {
+                                        mismatchFound = true;
+                                    }
+                                    openBrackets++;
+                                    foundOpen = true;
+                                    foundClose = false;
+                                }
+                                else if (c == ')')
+                                {
+                                    closeBrackets++;
+                                    if (closeBrackets > openBrackets || !foundOpen)
+                                    {
+                                        mismatchFound = true;
+                                        break;
+                                    }
+                                    foundOpen = false;
+                                    foundClose = true;
+                                }
+                            }
+
+                            if (openBrackets != closeBrackets || mismatchFound || !foundClose)
                             {
                                 cleanline = indent + "}\n " + indent + "else if (" + condition + ")";
                             }
