@@ -21,12 +21,30 @@
     <ClCompile Include="JassNativesList.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Blizzard.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="common.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="war3map.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="JassNativesList.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="JassDefineHeader.h">
+    <ClInclude Include="Blizzard.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="JassTypes.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="war3map.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

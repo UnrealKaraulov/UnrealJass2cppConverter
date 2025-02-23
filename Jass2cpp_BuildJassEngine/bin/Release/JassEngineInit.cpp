@@ -2,7 +2,6 @@
 #include <Windows.h>
 #include <sstream>
 #include <string>
-#include "JassDefineHeader.h"
 #include "JassNativesList.h"
 #include "MinHook.h"
 namespace JASSCPP {
@@ -51,10 +50,6 @@ const char * BoolToStr( BOOL boolean )
 {
     return boolean ? "true" : "false";
 }
-float GetFloatFromDWFP( DWFP val )
-{
-    return val.fl;
-}
 char * ReadJassStringNormal( int JASSSTRING )
 {
     if ( JASSSTRING == NULL || JASSSTRING >= INT_MAX ) { return NULL; }
@@ -84,13 +79,13 @@ char * ReadJassSID(int JSID)
 std::string GetUnitHID( int unitid )
 {
    if ( unitid == 0 ) return "null";
-       std::stringstream s; s << unitid; s << "(" << GetStrID( GetUnitTypeId_org(unitid) ) << ")";
+       std::stringstream s; s << unitid; s << "(" << GetStrID( GetUnitTypeId(unitid) ) << ")";
     return s.str( );
 }
 std::string GetItemHID( int itemid )
 {
    if ( itemid == 0 ) return "null";
-        std::stringstream s; s << itemid; s << "(" << GetStrID( GetItemTypeId_org( itemid ) ) << ")";
+        std::stringstream s; s << itemid; s << "(" << GetStrID( GetItemTypeId( itemid ) ) << ")";
     return s.str( );
 }
 }

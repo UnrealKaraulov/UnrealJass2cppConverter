@@ -3,8 +3,12 @@
   "WorkspaceRootPath": "C:\\Projects\\WAR3\\UnrealJass2cppConverter\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{BEE0A3EE-B378-4BCC-A477-520BDE4A767F}|Jass2cppConverter\\Jass2cppConverter.csproj|c:\\projects\\war3\\unrealjass2cppconverter\\jass2cppconverter\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{BEE0A3EE-B378-4BCC-A477-520BDE4A767F}|Jass2cppConverter\\Jass2cppConverter.csproj|solutionrelative:jass2cppconverter\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{C451A347-28EA-4737-A163-2883E1C445EC}|JASSCPPENGINE\\JASSCPPENGINE.vcxproj|C:\\Projects\\WAR3\\UnrealJass2cppConverter\\JASSCPPENGINE\\war3map.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{C451A347-28EA-4737-A163-2883E1C445EC}|JASSCPPENGINE\\JASSCPPENGINE.vcxproj|solutionrelative:JASSCPPENGINE\\war3map.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C451A347-28EA-4737-A163-2883E1C445EC}|JASSCPPENGINE\\JASSCPPENGINE.vcxproj|C:\\Projects\\WAR3\\UnrealJass2cppConverter\\JASSCPPENGINE\\war3map.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{C451A347-28EA-4737-A163-2883E1C445EC}|JASSCPPENGINE\\JASSCPPENGINE.vcxproj|solutionrelative:JASSCPPENGINE\\war3map.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,19 +18,32 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "war3map.h",
+              "DocumentMoniker": "C:\\Projects\\WAR3\\UnrealJass2cppConverter\\JASSCPPENGINE\\war3map.h",
+              "RelativeDocumentMoniker": "JASSCPPENGINE\\war3map.h",
+              "ToolTip": "C:\\Projects\\WAR3\\UnrealJass2cppConverter\\JASSCPPENGINE\\war3map.h",
+              "RelativeToolTip": "JASSCPPENGINE\\war3map.h",
+              "ViewState": "AgIAAGYnAAAAAAAAAAAQwHcnAAA6AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-02-23T17:55:46.436Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Projects\\WAR3\\UnrealJass2cppConverter\\Jass2cppConverter\\Program.cs",
-              "RelativeDocumentMoniker": "Jass2cppConverter\\Program.cs",
-              "ToolTip": "C:\\Projects\\WAR3\\UnrealJass2cppConverter\\Jass2cppConverter\\Program.cs",
-              "RelativeToolTip": "Jass2cppConverter\\Program.cs",
-              "ViewState": "AgIAAIMAAAAAAAAAAAAQwJcAAAA+AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-23T08:35:01.06Z",
+              "Title": "war3map.cpp",
+              "DocumentMoniker": "C:\\Projects\\WAR3\\UnrealJass2cppConverter\\JASSCPPENGINE\\war3map.cpp",
+              "RelativeDocumentMoniker": "JASSCPPENGINE\\war3map.cpp",
+              "ToolTip": "C:\\Projects\\WAR3\\UnrealJass2cppConverter\\JASSCPPENGINE\\war3map.cpp",
+              "RelativeToolTip": "JASSCPPENGINE\\war3map.cpp",
+              "ViewState": "AgIAAA/iAQAAAAAAAAAQwB3iAQABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-02-23T17:54:59.226Z",
               "EditorCaption": ""
             }
           ]

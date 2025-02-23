@@ -75,22 +75,22 @@ namespace JassEngineBuilder
             File.AppendAllText(".\\JassEngineInit.cpp", str + "\n");
         }
 
-        static void WriteToJassDefineHeader(string str)
-        {
-            if (!File.Exists(".\\JassDefineHeader.h"))
-            {
-                File.Create(".\\JassDefineHeader.h").Close();
-            }
+        //static void WriteToJassDefineHeader(string str)
+        //{
+        //    if (!File.Exists(".\\JassDefineHeader.h"))
+        //    {
+        //        File.Create(".\\JassDefineHeader.h").Close();
+        //    }
 
-            File.AppendAllText(".\\JassDefineHeader.h", str + "\n");
-        }
+        //    File.AppendAllText(".\\JassDefineHeader.h", str + "\n");
+        //}
 
 
 
         static void Main(string[] args)
         {
             string RegexFuncInfo = @"^\s*(\w+.*?)__cdecl\s*(\w+)\((.*?\))$";
-            string RegexFuncArgs = @"(\w+)([\s|\*]+\w+)\W\s*";
+            string RegexFuncArgs = @"(\w+(?:\s*\*\s*|\s+&\s*|\s+))(\w+)\s*(?:,|\))";
             string RegexFuncAddr = @"^\s*add\s+eax\s*,\s*(\w+)";
             string[] CJassData = File.ReadAllLines("CJass.cpp");
             // List<_funcaddr> funcaddrlist = new List<_funcaddr>();
@@ -127,10 +127,10 @@ namespace JassEngineBuilder
             {
                 File.Delete(".\\JassNativesList.h");
             }
-            if (File.Exists(".\\JassDefineHeader.h"))
-            {
-                File.Delete(".\\JassDefineHeader.h");
-            }
+            //if (File.Exists(".\\JassDefineHeader.h"))
+            //{
+            //    File.Delete(".\\JassDefineHeader.h");
+            //}
 
             if (File.Exists(".\\JassEngineInit.cpp"))
             {
@@ -156,24 +156,49 @@ namespace JassEngineBuilder
 
                     foreach (Match GetFuncArgs in Regex.Matches(argsstring, RegexFuncArgs))
                     {
-                        if (!GetFuncArgs.Success && argsstring != ")")
+                        if (!GetFuncArgs.Success)
                         {
                             Console.WriteLine("ERROR:" + argsstring);
-                            Console.ReadLine();
+                            continue; // Пропустить невалидные совпадения
                         }
 
+                        argstruct tmparg = new argstruct();
 
-                        int argscount = GetFuncArgs.Groups.Count / 2;
-                        for (int i = 0; i < argscount; i++)
+                        // Проверка на наличие групп
+                        if (GetFuncArgs.Groups.Count >= 3) // Группы индексируются с 1, поэтому Count >= 3
                         {
-                            argstruct tmparg = new argstruct();
-                            tmparg.argname =
-                                GetFuncArgs.Groups[i + 2].Value.Trim().Replace(",", "").Trim().Replace('*', '&');
-                            tmparg.argtype =
-                                GetFuncArgs.Groups[i + 1].Value.Trim().Replace(",", "").Trim().Replace('*', '&');
+                            tmparg.argtype = GetFuncArgs.Groups[1].Value.Trim().Replace(",", "").Trim().Replace('*', '&');
+                            tmparg.argname = GetFuncArgs.Groups[2].Value.Trim().Replace(",", "").Trim().Replace('*', '&');
 
+                            // Обработка сложных типов
+                            if (tmparg.argtype.StartsWith("H"))
+                            {
+                                tmparg.argtype = tmparg.argtype.ToLower();
+                                tmparg.argtype = tmparg.argtype.Remove(0, 1);
+                            }
+                            else if (tmparg.argtype == "DWFP")
+                            {
+                                tmparg.argtype = "float";
+                            }
+                            else if (tmparg.argtype == "CODE")
+                            {
+                                tmparg.argtype = "code";
+                            }
+
+                            if (tmparg.argname.StartsWith("&"))
+                            {
+                                tmparg.argname = tmparg.argname.Insert(1, "_");
+                            }
+                            else
+                            {
+                                tmparg.argname = "_" + tmparg.argname;
+                            }
 
                             FuncArgs.Add(tmparg);
+                        }
+                        else
+                        {
+                            Console.WriteLine("WARNING: Invalid argument format: " + GetFuncArgs.Value);
                         }
                     }
 
@@ -184,31 +209,20 @@ namespace JassEngineBuilder
                     NewFunction.FuncName = FuncName.Trim();
 
                     NewFunction.FuncType = FuncType.Trim();
+                    if (NewFunction.FuncType.StartsWith("H"))
+                    {
+                        NewFunction.FuncType = NewFunction.FuncType.ToLower();
+                        NewFunction.FuncType = NewFunction.FuncType.Remove(0, 1);
+                    }
+                    else if (NewFunction.FuncType == "DWFP")
+                    {
+                        NewFunction.FuncType = "float";
+                    }
                     JassNativeFunctions.Add(NewFunction);
 
                 }
                 index++;
             }
-
-            argstruct DefaultVars = new argstruct();
-            DefaultVars.argname = "float";
-            DefaultVars.argtype = "//";
-            TypedefList.Add(DefaultVars);
-            DefaultVars.argname = "float &";
-            DefaultVars.argtype = "//";
-            TypedefList.Add(DefaultVars);
-            DefaultVars.argname = "int";
-            DefaultVars.argtype = "//";
-            TypedefList.Add(DefaultVars);
-            DefaultVars.argname = "BOOL";
-            DefaultVars.argtype = "//";
-            TypedefList.Add(DefaultVars);
-            DefaultVars.argname = "void";
-            DefaultVars.argtype = "//";
-            TypedefList.Add(DefaultVars);
-            DefaultVars.argname = "DWFP";
-            DefaultVars.argtype = "//";
-            TypedefList.Add(DefaultVars);
 
             for (int i = 0; i < JassNativeFunctions.Count; i++)
             {
@@ -254,24 +268,19 @@ namespace JassEngineBuilder
                 }
             }
 
-            WriteToJassDefineHeader("#pragma once");
-            WriteToJassDefineHeader("namespace JASSCPP {");
-            WriteToJassDefineHeader("union DWFP");
-            WriteToJassDefineHeader("{");
-            WriteToJassDefineHeader("unsigned int dw;");
-            WriteToJassDefineHeader("float fl;");
-            WriteToJassDefineHeader("};");
+            //WriteToJassDefineHeader("#pragma once");
+            //WriteToJassDefineHeader("namespace JASSCPP {");
 
-            foreach (argstruct str in TypedefList)
-            {
-                WriteToJassDefineHeader(str.argtype + str.argname + ";");
-            }
-            WriteToJassDefineHeader("};");
+            //foreach (argstruct str in TypedefList)
+            //{
+            //    WriteToJassDefineHeader(str.argtype + str.argname + ";");
+            //}
+            //WriteToJassDefineHeader("};");
 
             WriteToJassNativesList("#pragma once");
             WriteToJassNativesList("#include <Windows.h>");
             WriteToJassNativesList("#include <stdio.h>");
-            WriteToJassNativesList("#include \"JassDefineHeader.h\"");
+            WriteToJassNativesList("#include \"JassTypes.h\"");
             WriteToJassNativesList("namespace JASSCPP {");
             WriteToJassNativesList("extern int GameDll;");
 
@@ -288,7 +297,7 @@ namespace JassEngineBuilder
             WriteToJassEngineInit("#include <Windows.h>");
             WriteToJassEngineInit("#include <sstream>");
             WriteToJassEngineInit("#include <string>");
-            WriteToJassEngineInit("#include \"JassDefineHeader.h\"");
+            //WriteToJassEngineInit("#include \"JassDefineHeader.h\"");
             WriteToJassEngineInit("#include \"JassNativesList.h\"");
             WriteToJassEngineInit("#include \"MinHook.h\"");
             WriteToJassEngineInit("namespace JASSCPP {");
@@ -342,11 +351,6 @@ namespace JassEngineBuilder
             WriteToJassEngineInit("    return boolean ? \"true\" : \"false\";");
             WriteToJassEngineInit("}");
 
-            WriteToJassEngineInit("float GetFloatFromDWFP( DWFP val )");
-            WriteToJassEngineInit("{");
-            WriteToJassEngineInit("    return val.fl;");
-            WriteToJassEngineInit("}");
-
             WriteToJassEngineInit("char * ReadJassStringNormal( int JASSSTRING )");
             WriteToJassEngineInit("{");
             WriteToJassEngineInit("    if ( JASSSTRING == NULL || JASSSTRING >= INT_MAX ) { return NULL; }");
@@ -378,14 +382,14 @@ namespace JassEngineBuilder
             WriteToJassEngineInit("std::string GetUnitHID( int unitid )");
             WriteToJassEngineInit("{");
             WriteToJassEngineInit("   if ( unitid == 0 ) return \"null\";");
-            WriteToJassEngineInit("       std::stringstream s; s << unitid; s << \"(\" << GetStrID( GetUnitTypeId_org(unitid) ) << \")\";");
+            WriteToJassEngineInit("       std::stringstream s; s << unitid; s << \"(\" << GetStrID( GetUnitTypeId(unitid) ) << \")\";");
             WriteToJassEngineInit("    return s.str( );");
             WriteToJassEngineInit("}");
 
             WriteToJassEngineInit("std::string GetItemHID( int itemid )");
             WriteToJassEngineInit("{");
             WriteToJassEngineInit("   if ( itemid == 0 ) return \"null\";");
-            WriteToJassEngineInit("        std::stringstream s; s << itemid; s << \"(\" << GetStrID( GetItemTypeId_org( itemid ) ) << \")\";");
+            WriteToJassEngineInit("        std::stringstream s; s << itemid; s << \"(\" << GetStrID( GetItemTypeId( itemid ) ) << \")\";");
             WriteToJassEngineInit("    return s.str( );");
             WriteToJassEngineInit("}");
 
@@ -418,10 +422,10 @@ namespace JassEngineBuilder
             for (int i = 0; i < JassNativeFunctions.Count; i++)
             {
                 WriteToJassNativesList("extern " + JassNativeFunctions[i].FuncName +
-                    "_FUNC " + JassNativeFunctions[i].FuncName + "_org;");
+                    "_FUNC " + JassNativeFunctions[i].FuncName + ";");
 
                 WriteToJassNativesListInitialzier(JassNativeFunctions[i].FuncName +
-                    "_FUNC " + JassNativeFunctions[i].FuncName + "_org = nullptr;");
+                    "_FUNC " + JassNativeFunctions[i].FuncName + " = nullptr;");
             }
 
 
@@ -433,7 +437,7 @@ namespace JassEngineBuilder
             WriteToJassNativesListInitialzier("   LookupNative_org = (LookupNative) (GameDll + 0x44EA00);");
             for (int i = 0; i < JassNativeFunctions.Count; i++)
             {
-                WriteToJassNativesListInitialzier("   " + JassNativeFunctions[i].FuncName + "_org = (" + JassNativeFunctions[i].FuncName +
+                WriteToJassNativesListInitialzier("   " + JassNativeFunctions[i].FuncName + " = (" + JassNativeFunctions[i].FuncName +
                     "_FUNC " + ") LookupNative_org(\"" + JassNativeFunctions[i].FuncName + "\",0);");
             }
             WriteToJassNativesListInitialzier("}");

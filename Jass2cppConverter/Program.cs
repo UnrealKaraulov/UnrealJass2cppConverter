@@ -19,6 +19,11 @@ namespace Jass2cppConverter
             public bool isconstant;
             public string comment;
         }
+        struct JassArg
+        {
+            public string argtype;
+            public string argname;
+        }
 
         struct Function
         {
@@ -26,7 +31,7 @@ namespace Jass2cppConverter
             public string returntype;
             public List<JassVar> vars;
             public List<string> body;
-            public string args;
+            public List<JassArg> args;
         }
 
         static List<Function> Functions = null;
@@ -41,7 +46,7 @@ namespace Jass2cppConverter
         const string RegexGetEndGlobals = @"^\s*endglobals\s*$";
         const string RegexGetVarData = @"^\s*(constant\s+|local\s+|)(\w+)\s+(array\s+|)(\w+)\s*(=.*|)\s*$";
         const string RegexGetValueFromVar = @"=\s*(.*)$";
-        const string RegexGetFunctionNameAndVars = @"^\s*(constant\s+|)function\s+(.+)\s+takes\s+(.+)\s+returns\s+(.+)$";
+        const string RegexGetFunctionNameAndVars = @"^\s*(constant\s+|)function\s+(.+)\s+takes\s+(.+)\s+returns\s+(.+)\s*$";
         const string RegexGetFunctionEnd = @"^\s*endfunction\s*$";
         const string RegexGetKeyWordLocal = @"^\s*local\b.*$";
         const string RegexGetKeyWordSet = @"^\s*set\b";
@@ -49,11 +54,12 @@ namespace Jass2cppConverter
         const string RegexGetIfConditionEmpty = @"^\s*if\s*(.+)\s*then\s*$";
         const string RegexGetElseIfConditionEmpty = @"^\s*elseif\s*(.+)\s*then\s*$";
         const string RegexGetLoop = @"^\s*loop\s*$";
-        const string RegexGetExitWhen = @"^\s*exitwhen\s*(.+)$";
+        const string RegexGetExitWhen = @"^\s*exitwhen\s*(.+)\s*$";
         const string RegexGetEndLoop = @"^\s*endloop\s*$";
+        const string RegexFuncArgs = @"(\w+)\s+(\w+)\s*(?:,|$)";
+        const string RegexTypeDefinition = @"^\s*type\s+(.+)\s+extends\s+(.+)\s*$";
 
         static string[] War3MapJdata = null;
-        static string War3MapCppPath = string.Empty;
 
         static string getIndent(int level)
         {
@@ -63,6 +69,48 @@ namespace Jass2cppConverter
                 outstr += "    ";
             }
             return outstr;
+        }
+
+        static int BuildTypedefs()
+        {
+            File.Delete("JassTypes.h");
+            int typedefs = 19;
+            StringBuilder typeBuilder = new StringBuilder();
+            typeBuilder.AppendLine("namespace JASSCPP {");
+            typeBuilder.AppendLine("#define null NULL");
+            typeBuilder.AppendLine("using CJassStringSID = int;");
+            typeBuilder.AppendLine("using CJassString = int;");
+            typeBuilder.AppendLine("using boolean = bool;");
+            typeBuilder.AppendLine("using integer = int;");
+            typeBuilder.AppendLine("using handle = unsigned int;");
+            typeBuilder.AppendLine("using real = float;");
+            typeBuilder.AppendLine("using agent = JASSCPP::handle;");
+            typeBuilder.AppendLine("using playerscore = JASSCPP::handle;");
+            typeBuilder.AppendLine("using soundtype = JASSCPP::handle;");
+            typeBuilder.AppendLine("using weapontype = JASSCPP::handle;");
+            typeBuilder.AppendLine("using image = JASSCPP::handle;");
+            typeBuilder.AppendLine("using ubersplat = JASSCPP::handle;");
+            typeBuilder.AppendLine("using hashtable = JASSCPP::handle;");
+            typeBuilder.AppendLine("using pathingtype = JASSCPP::handle;");
+            typeBuilder.AppendLine("using attacktype = JASSCPP::handle;");
+            typeBuilder.AppendLine("using damagetype = JASSCPP::handle;");
+            typeBuilder.AppendLine("using code = JASSCPP::handle;");
+            typeBuilder.AppendLine("using lightning = JASSCPP::handle;");
+
+
+            foreach (string str in War3MapJdata)
+            {
+                var match = Regex.Match(str, RegexTypeDefinition);
+                if (match.Success)
+                {
+                    string typeName = match.Groups[1].Value;
+                    string baseType = match.Groups[2].Value;
+                    typeBuilder.AppendLine($"    using {typeName} = JASSCPP::{baseType};");
+                }
+            }
+            typeBuilder.AppendLine("}");
+            File.WriteAllText("JassTypes.h", typeBuilder.ToString());
+            return typedefs;
         }
 
         static void BuildGlobalVars()
@@ -96,7 +144,7 @@ namespace Jass2cppConverter
                     if (Regex.Match(str, RegexBadLine2).Success || !curGlobalDataMatch.Success)
                     {
                         lastCommentString = str.Trim();
-                        return;
+                        continue;
                     }
 
                     JassVar tmpGlobalVarData = new JassVar();
@@ -183,12 +231,35 @@ namespace Jass2cppConverter
                 if ((FuncNameAndVars = Regex.Match(str, RegexGetFunctionNameAndVars)).Success)
                 {
                     tempfunc.name = FuncNameAndVars.Groups[2].Value;
-                    tempfunc.args = FuncNameAndVars.Groups[3].Value;
+
+                    tempfunc.args = new List<JassArg>();
+                    string argsstring = FuncNameAndVars.Groups[3].Value;
+                    foreach (Match GetFuncArgs in Regex.Matches(argsstring, RegexFuncArgs))
+                    {
+                        if (!GetFuncArgs.Success && argsstring != ")")
+                        {
+                            Console.WriteLine("ERROR:" + argsstring);
+                            Console.ReadLine();
+                        }
+
+
+                        int argscount = GetFuncArgs.Groups.Count / 2;
+                        for (int i = 0; i < argscount; i++)
+                        {
+                            JassArg tmparg = new JassArg();
+                            tmparg.argname =
+                                GetFuncArgs.Groups[i + 2].Value.Trim().Replace(",", "").Trim().Replace('*', '&');
+                            tmparg.argtype =
+                                GetFuncArgs.Groups[i + 1].Value.Trim().Replace(",", "").Trim().Replace('*', '&');
+
+                            tmparg.argtype = Regex.Replace(tmparg.argtype, @"\bnothing\b", "");
+
+                            tempfunc.args.Add(tmparg);
+                        }
+                    }
                     tempfunc.returntype = FuncNameAndVars.Groups[4].Value;
 
                     tempfunc.returntype = Regex.Replace(tempfunc.returntype, @"\bnothing\b", "void");
-                    tempfunc.args = Regex.Replace(tempfunc.args, @"\bnothing\b", "");
-
                     tempfunc.body = new List<string>();
                     tempfunc.vars = new List<JassVar>();
                     foundfunc = true;
@@ -200,10 +271,10 @@ namespace Jass2cppConverter
         static void Main(string[] args)
         {
             Console.WriteLine("Укажите файл c JASS скриптом для преобразования в JASS.cpp:");
-            string War3MapJpath = Console.ReadLine();
-            War3MapCppPath = War3MapJpath + ".cpp";
+            string War3MapJpath = Console.ReadLine().Replace("\"", "").Trim();
+            string NameSpaceFileName = Path.GetFileNameWithoutExtension(War3MapJpath);
             Console.WriteLine("Загрузка файла...");
-            string[] _tmpWar3MapJdata = File.ReadAllLines(War3MapJpath.Replace("\"", ""));
+            string[] _tmpWar3MapJdata = File.ReadAllLines(War3MapJpath);
             List<string> _tmpWar3MapJdataFixComments = new List<string>();
 
             for (int i = 0; i < _tmpWar3MapJdata.Length; i++)
@@ -235,6 +306,12 @@ namespace Jass2cppConverter
 
             Console.WriteLine("Загружено " + War3MapJdata.Length + " строк. Создается список глобальных переменных.");
             BuildGlobalVars();
+
+            int typedefs = BuildTypedefs();
+            if (typedefs > 0)
+            {
+                Console.WriteLine("Загружено " + typedefs + " типов включая стандартные.");
+            }
 
             Console.WriteLine("Преобразование типов переменных в C++");
             GlobalDefines = new List<string>();
@@ -272,19 +349,34 @@ namespace Jass2cppConverter
             Console.WriteLine("Загружено " + Functions.Count + " функций из JASS кода.");
 
             Console.WriteLine("Преобразование в CPP код....");
-            File.Delete("war3map.cpp");
-            File.Delete("war3map.h");
+            File.Delete(NameSpaceFileName + ".cpp");
+            File.Delete(NameSpaceFileName + ".h");
 
             StringBuilder cppBuilder = new StringBuilder();
             StringBuilder headerBuilder = new StringBuilder();
 
-            cppBuilder.AppendLine("#include \"war3map.h\"");
-            cppBuilder.AppendLine("namespace war3map\n{");
+
+            if (NameSpaceFileName.ToLower().IndexOf("war3map") >= 0)
+            {
+                //cppBuilder.AppendLine("#include \"..\\JassDefineHeader.h\"");
+                headerBuilder.AppendLine("#include \"JassNativesList.h\"");
+            }
+
+            headerBuilder.AppendLine("#include \"JassTypes.h\"");
+
+            if (NameSpaceFileName.ToLower().IndexOf("war3map") >= 0)
+            {
+                headerBuilder.AppendLine("#include \"common.h\"");
+                headerBuilder.AppendLine("#include \"Blizzard.h\"");
+            }
+
+            cppBuilder.AppendLine("#include \"" + NameSpaceFileName + ".h\"");
+            cppBuilder.AppendLine("namespace " + NameSpaceFileName + "\n{");
 
             cppBuilder.AppendLine("//Global vars");
             cppBuilder.AppendLine(string.Join("\n", GlobalVariables));
 
-            headerBuilder.AppendLine("namespace war3map\n{");
+            headerBuilder.AppendLine("namespace " + NameSpaceFileName + "\n{");
             headerBuilder.AppendLine("//Global defines");
             headerBuilder.AppendLine(string.Join("\n", GlobalDefines));
             headerBuilder.AppendLine("//Global vars");
@@ -295,9 +387,24 @@ namespace Jass2cppConverter
 
             foreach (var func in Functions)
             {
-                headerBuilder.AppendLine((func.returntype.Length > 0 && func.returntype != "void" ? "JASSCPP::" + func.returntype : func.returntype) + " " + func.name + "(" + func.args + ");");
+                string argstring = "";
+                foreach (var arg in func.args)
+                {
+                    argstring += "JASSCPP::" + arg.argtype + " " + arg.argname + ",";
+                }
+                if (argstring.Length > 0)
+                {
+                    argstring = argstring.Remove(argstring.Length - 1);
+                }
 
-                cppBuilder.AppendLine((func.returntype.Length > 0 && func.returntype != "void" ? "JASSCPP::" + func.returntype : func.returntype) + " " + func.name + "(" + func.args + ")");
+                headerBuilder.Append((func.returntype.Length > 0 && func.returntype != "void" ? "JASSCPP::" + func.returntype : func.returntype) + " " + func.name + "(");
+                headerBuilder.Append(argstring);
+                headerBuilder.AppendLine(");");
+
+                cppBuilder.Append((func.returntype.Length > 0 && func.returntype != "void" ? "JASSCPP::" + func.returntype : func.returntype) + " " + func.name + "(");
+                cppBuilder.Append(argstring);
+                cppBuilder.AppendLine(")");
+
                 cppBuilder.AppendLine("{");
 
                 foreach (JassVar tmpLocalVar in func.vars)
@@ -554,8 +661,8 @@ namespace Jass2cppConverter
             cppBuilder.AppendLine("}");
             headerBuilder.AppendLine("}");
 
-            File.AppendAllText("war3map.cpp", cppBuilder.ToString());
-            File.AppendAllText("war3map.h", headerBuilder.ToString());
+            File.AppendAllText("" + NameSpaceFileName + ".cpp", cppBuilder.ToString());
+            File.AppendAllText("" + NameSpaceFileName + ".h", headerBuilder.ToString());
 
             Console.WriteLine("Преобразование в CPP код завершено!");
             //Console.WriteLine("Создание JASS движка начинается...");

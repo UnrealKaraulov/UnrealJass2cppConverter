@@ -18,6 +18,20 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Blizzard.cpp" />
+    <ClCompile Include="common.cpp" />
+    <ClCompile Include="JassEngineInit.cpp" />
+    <ClCompile Include="JassNativesList.cpp" />
+    <ClCompile Include="war3map.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Blizzard.h" />
+    <ClInclude Include="common.h" />
+    <ClInclude Include="JassNativesList.h" />
+    <ClInclude Include="JassTypes.h" />
+    <ClInclude Include="war3map.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -130,14 +144,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="JassEngineInit.cpp" />
-    <ClCompile Include="JassNativesList.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="JassDefineHeader.h" />
-    <ClInclude Include="JassNativesList.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

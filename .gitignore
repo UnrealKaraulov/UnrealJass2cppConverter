@@ -18,3 +18,5 @@
 Jass2cppConverter/bin/Release/War3map.j
 Jass2cppConverter/bin/Release/war3map.cpp
 Jass2cppConverter/bin/Release/war3map.h
+*.ipch
+*.json
